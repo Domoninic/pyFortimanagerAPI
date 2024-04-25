@@ -1789,3 +1789,222 @@ class FortiManager:
                    }
         get_dhcp_server = session.post(url=self.base_url, json=payload, verify=self.verify)
         return get_dhcp_server.json()["result"]
+
+    # Workflow Session api calls
+    def start_session(self, name="Session Name", desc = "Session Desc", session_id = 0):
+        """
+        Start or resume Session in current Adom in FortiManager 
+        Adom has to be in workspace mode
+        :param name: Name for the session
+        :param desc: description for the session
+        :return: Response of status code (0=success) with data in JSON Format
+        """
+        #personally I woul have a seperate resume session but the api overloads start 
+        url = f"dvmdb/adom/{self.adom}/workflow/start"
+        
+        if session_id == 0:
+            
+            payload = \
+            {
+                "method": "exec",
+                "params":
+                    [
+                        {
+                            "url": url,
+                            "workflow": {
+                                "name" : name,
+                                "desc": desc,
+                            }
+                        }
+                    ],
+            }
+        else :
+                        payload = \
+            {
+                "method": "exec",
+                "params":
+                    [
+                        {
+                            "url": f'{url}/{session_id}',
+                        }
+                    ],
+            }
+        
+        return self.custom_api(payload)
+    
+    def __save_delete_discard_session(self, method, session_id = 0):
+        """
+        save_delete_discardk current session in FortiManager 
+        Adom has to be in workspace mode
+        :param method: lock or unlock adom
+        :param name: Can lock specific adom using name as a filter
+        :return: Response of status code (0=success) with data in JSON Format
+        """
+        
+        url = f"dvmdb/adom/{self.adom}/workflow/{method}/{session_id}"
+
+        payload = \
+            {
+                "method": "exec",
+                "params":
+                    [
+                        {
+                            "url": url
+                        }
+                    ],
+            }
+
+        return self.custom_api(payload)
+    
+    def save_session(self, session_id = 0):
+        """
+        Save Session in current Adom in FortiManager 
+        Adom has to be in workspace mode
+        :param session_id: Session ID for existing session to save 
+        :return: Response of status code (0=success) with data in JSON Format
+        """
+        #url = f"dvmdb/adom/{self.adom}/workflow/save/{session_id}"
+        #
+        #payload = \
+        #{
+        #    "method": "exec",
+        #    "params":
+        #        [
+        #            {
+        #                "url": url,
+        #            }
+        #        ],
+        #}
+ #
+        #return self.custom_api(payload)
+        method = 'save'
+        return self.__save_delete_discard_session(method, session_id)
+
+    def discard_session(self, session_id = 0):
+        """
+        Discard Session in current Adom in FortiManager 
+        Adom has to be in workspace mode
+        :param session_id: Session ID for existing session to discard 
+        :return: Response of status code (0=success) with data in JSON Format
+        """
+        #url = f"dvmdb/adom/{self.adom}/workflow/discard/{session_id}" 
+        #
+        #payload = \
+        #   {
+        #  "method": "exec",
+        #  "params": [
+        #    {
+        #      "url": url
+        #    }
+        #  ],
+        #}
+#
+        #return self.custom_api(payload)
+        method = 'discard'
+        return self.__save_delete_discard_session(method, session_id)
+
+    def delete_session(self, session_id = 0):
+        """
+        Delete Session in current Adom in FortiManager 
+        Adom has to be in workspace mode
+        :param session_id: Session ID for existing session to delete 
+        :return: Response of status code (0=success) with data in JSON Format
+        """
+        #url = f"dvmdb/adom/{self.adom}/workflow/drop/{session_id}" 
+        
+        #payload = \
+        #   {
+        #  "method": "exec",
+        #  "params": [
+        #    {
+        #      "url": url
+        #    }
+        #  ],
+        #}
+
+        #return self.custom_api(payload)
+        method = 'drop'
+        return self.__save_delete_discard_session(method, session_id)
+    
+    def submit_session(self, session_id, desc):
+        """
+        SSubmit Session in current Adom in FortiManager 
+        Adom has to be in workspace mode
+        :param session_id: Session ID for existing session to submit
+        :param desc: description for submit 
+        :return: Response of status code (0=success) with data in JSON Format
+        """
+
+        url = f"dvmdb/adom/{self.adom}/workflow/submit/{session_id}"
+        
+        payload = \
+        {
+            "method": "exec",
+            "params":
+                [
+                    {
+                        "url": url,
+                        "workflow": {
+                          "desc": desc,
+                          "fmgip": self.host,
+                          "no_diff": 0
+                        }
+                    }
+                ],
+        }
+ 
+        return self.custom_api(payload)
+  
+    def approve_session(self, session_id, desc):
+        """
+        Approve Session in current Adom in FortiManager 
+        Adom has to be in workspace mode
+        :param session_id: Session ID for existing session to approve
+        :param desc: description for submit 
+        :return: Response of status code (0=success) with data in JSON Format
+        """
+
+        url = f"dvmdb/adom/{self.adom}/workflow/approve/{session_id}"
+        
+        payload = \
+        {
+            "method": "exec",
+            "params":
+                [
+                    {
+                        "url": url,
+                        "workflow": {
+                          "desc": desc,
+                        }
+                    }
+                ],
+        }
+ 
+        return self.custom_api(payload)
+
+    def reject_session(self, session_id, desc):
+        """
+        Reject Session in current Adom in FortiManager 
+        Adom has to be in workspace mode
+        :param session_id: Session ID for existing session to submit
+        :param desc: description for submit 
+        :return: Response of status code (0=success) with data in JSON Format
+        """
+
+        url = f"dvmdb/adom/{self.adom}/workflow/reject/{session_id}"
+        
+        payload = \
+        {
+            "method": "exec",
+            "params":
+                [
+                    {
+                        "url": url,
+                        "workflow": {
+                          "desc": desc,
+                        }
+                    }
+                ],
+        }
+ 
+        return self.custom_api(payload)
