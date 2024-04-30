@@ -1073,7 +1073,7 @@ class FortiManager:
 
     def add_firewall_policy(self, policy_package_name: str, name: str, source_interface: str,
                             source_address: str, destination_interface: str, destination_address: str,
-                            service: str, nat='disable', schedule="always", action=1, logtraffic=2):
+                            service: str, nat='disable', schedule="always", action=1, logtraffic=2, profile_protocol_options = "", ssl_ssh_profile = "no-inspection"):
         """
         Create your own policy in FortiManager using the instance parameters.
         :param policy_package_name: Enter the name of the policy package                eg. "default"
@@ -1090,6 +1090,8 @@ class FortiManager:
                             logtraffic=0: Means No Log
                             logtraffic=1 Means Log Security Events
                             logtraffic=2 Means Log All Sessions
+        :param profile-protocol-options : Enter the rofile-protocol-options object name in string format
+        :param ssl-ssh-profile : Enter the ssl-ssh-profile object name in string format         
         :return: Response of status code with data in JSON Format
         """
         session = self.login()
@@ -1107,7 +1109,9 @@ class FortiManager:
                         "srcaddr": source_address,
                         "srcintf": source_interface,
                         "action": action,
-                        "nat": nat
+                        "nat": nat,
+                        "profile-protocol-options" : profile_protocol_options,
+                        "ssl-ssh-profile" : ssl_ssh_profile
                     },
                     "url": f"pm/config/adom/{self.adom}/pkg/{policy_package_name}/firewall/policy/"
                 }
@@ -1863,20 +1867,6 @@ class FortiManager:
         :param session_id: Session ID for existing session to save 
         :return: Response of status code (0=success) with data in JSON Format
         """
-        #url = f"dvmdb/adom/{self.adom}/workflow/save/{session_id}"
-        #
-        #payload = \
-        #{
-        #    "method": "exec",
-        #    "params":
-        #        [
-        #            {
-        #                "url": url,
-        #            }
-        #        ],
-        #}
- #
-        #return self.custom_api(payload)
         method = 'save'
         return self.__save_delete_discard_session(method, session_id)
 
@@ -1887,19 +1877,6 @@ class FortiManager:
         :param session_id: Session ID for existing session to discard 
         :return: Response of status code (0=success) with data in JSON Format
         """
-        #url = f"dvmdb/adom/{self.adom}/workflow/discard/{session_id}" 
-        #
-        #payload = \
-        #   {
-        #  "method": "exec",
-        #  "params": [
-        #    {
-        #      "url": url
-        #    }
-        #  ],
-        #}
-#
-        #return self.custom_api(payload)
         method = 'discard'
         return self.__save_delete_discard_session(method, session_id)
 
@@ -1910,23 +1887,10 @@ class FortiManager:
         :param session_id: Session ID for existing session to delete 
         :return: Response of status code (0=success) with data in JSON Format
         """
-        #url = f"dvmdb/adom/{self.adom}/workflow/drop/{session_id}" 
-        
-        #payload = \
-        #   {
-        #  "method": "exec",
-        #  "params": [
-        #    {
-        #      "url": url
-        #    }
-        #  ],
-        #}
-
-        #return self.custom_api(payload)
         method = 'drop'
         return self.__save_delete_discard_session(method, session_id)
     
-    def submit_session(self, session_id, desc):
+    def submit_session(self, session_id, desc= ""):
         """
         SSubmit Session in current Adom in FortiManager 
         Adom has to be in workspace mode
@@ -1954,18 +1918,18 @@ class FortiManager:
         }
  
         return self.custom_api(payload)
-  
-    def approve_session(self, session_id, desc):
+ 
+    def __approve_reject_session(self, method, session_id = 0, desc= ""):
         """
-        Approve Session in current Adom in FortiManager 
+        approve or reject session in FortiManager 
         Adom has to be in workspace mode
-        :param session_id: Session ID for existing session to approve
-        :param desc: description for submit 
+        :param method: apporve or reject  adom
+        :param desc: Apporval or rejection message
         :return: Response of status code (0=success) with data in JSON Format
         """
-
-        url = f"dvmdb/adom/{self.adom}/workflow/approve/{session_id}"
         
+        url = f"dvmdb/adom/{self.adom}/workflow/{method}/{session_id}"
+
         payload = \
         {
             "method": "exec",
@@ -1979,8 +1943,17 @@ class FortiManager:
                     }
                 ],
         }
- 
-        return self.custom_api(payload)
+  
+    def approve_session(self, session_id, desc):
+        """
+        Approve Session in current Adom in FortiManager 
+        Adom has to be in workspace mode
+        :param session_id: Session ID for existing session to approve
+        :param desc: Approval message
+        :return: Response of status code (0=success) with data in JSON Format
+        """
+        method = 'approve'
+        return self.__approve_reject_session(self, method, session_id = 0, desc= "")
 
     def reject_session(self, session_id, desc):
         """
@@ -1990,21 +1963,5 @@ class FortiManager:
         :param desc: description for submit 
         :return: Response of status code (0=success) with data in JSON Format
         """
-
-        url = f"dvmdb/adom/{self.adom}/workflow/reject/{session_id}"
-        
-        payload = \
-        {
-            "method": "exec",
-            "params":
-                [
-                    {
-                        "url": url,
-                        "workflow": {
-                          "desc": desc,
-                        }
-                    }
-                ],
-        }
- 
-        return self.custom_api(payload)
+        method = 'reject'
+        return self.__approve_reject_session(self, method, session_id = 0, desc= "")
